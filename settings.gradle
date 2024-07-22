@@ -1,0 +1,13 @@
+pluginManagement {
+	repositories {
+		maven {
+			url 'https://lss233.littleservice.cn/repositories/minecraft/'
+		}
+		maven {
+			name = 'Fabric'
+			url = 'https://maven.fabricmc.net/'
+		}
+		mavenCentral()
+		gradlePluginPortal()
+	}
+}

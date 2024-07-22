@@ -1,0 +1,11 @@
+{
+	"required": true,
+	"package": "com.chengxuyee.potion_mixing.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"PotionMixingMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
