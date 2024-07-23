@@ -72,7 +72,27 @@ public abstract class PotionMixingMixin {
 					ItemStack ij = craftingInventory.getStack(i);
 					if(ij.getItem() != Items.AIR){
 						for (StatusEffectInstance k : ij.get(DataComponentTypes.POTION_CONTENTS).getEffects()) {
-							component = component.with(k);
+							new_effect = true;
+							if(!(k.getEffectType().equals(StatusEffects.INSTANT_HEALTH) || k.getEffectType().equals(StatusEffects.INSTANT_DAMAGE))){
+								for(StatusEffectInstance p : component.getEffects()){
+									if(p.getEffectType().equals(k.getEffectType())){
+										if(new_effect){
+											new_effect = false;
+										}
+										if(k.getAmplifier() > p.getAmplifier()){
+											component = replace(component, p, k);
+										}else if(k.getAmplifier() == p.getAmplifier()){
+											if(k.getDuration() > p.getDuration()){
+												component = replace(component, p, k);
+											}
+										}
+										break;
+									}
+								}
+							}
+							if(new_effect){
+								component = component.with(k);
+							}
 						}
 					}
 				}
