@@ -17,9 +17,7 @@
 		"main": [
 			"com.chengxuyee.potion_mixing.PotionMixing"
 		],
-		"fabric-datagen": [
-			"com.chengxuyee.potion_mixing.PotionMixingDataGenerator"
-		]
+		"fabric-datagen": []
 	},
 	"mixins": [
 		"potion_mixing.mixins.json"
