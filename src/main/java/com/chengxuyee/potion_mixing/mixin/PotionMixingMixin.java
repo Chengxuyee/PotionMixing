@@ -4,6 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingResultInventory;
 import net.minecraft.inventory.RecipeInputInventory;
@@ -18,18 +19,25 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+
+//HOW CAN I WRITE SUCH SHITTY CODE??????????????
 @Mixin(CraftingScreenHandler.class)
-public abstract class PotionMixingMixin {
+public abstract class UpdateResultMixin{
 	private static byte air;
 	private static byte potion;
-	private static byte splash_potion;
-	private static byte lingering_potion;
+	private static byte splashPotion;
+	private static byte lingeringPotion;
 	private static ItemStack itemStack;
+	private static PotionContentsComponent component;
+	private static ServerPlayerEntity serverPlayerEntity;
+	private static boolean newEffect;
 
 	@Inject(method = "updateResult", at = @At("TAIL"))
 
@@ -40,44 +48,46 @@ public abstract class PotionMixingMixin {
 								 CraftingResultInventory resultInventory,
 								 @Nullable RecipeEntry<CraftingRecipe> recipe,
 								 CallbackInfo ci) {
-		if(!world.isClient){
+		 if(!world.isClient){
 			//Check if the player is trying to mix the potions together.
 			air = (byte)0;
 			potion = (byte)0;
-			splash_potion = (byte)0;
-			lingering_potion = (byte)0;
+			splashPotion = (byte)0;
+			lingeringPotion = (byte)0;
 			for(int i = 0; i <= 8; i++){
 				ItemStack stack = craftingInventory.getStack(i);
 				if(stack.getItem() == Items.POTION){
 					potion += (byte)1;
 				}else if(stack.getItem() == Items.SPLASH_POTION){
-					splash_potion += (byte)1;
+					splashPotion += (byte)1;
 				}else if(stack.getItem() == Items.LINGERING_POTION){
-					lingering_potion += (byte)1;
+					lingeringPotion += (byte)1;
 				}else if(stack.getItem() == Items.AIR){
 					air += (byte)1;
 				}
 			}
-			if(air + potion + splash_potion + lingering_potion == (byte)9 && potion + splash_potion + lingering_potion > 0) {
+			if(air + potion + splashPotion + lingeringPotion == (byte)9 && potion + splashPotion + lingeringPotion > 1) {
 				//Beginning of the new codes
-				if(splash_potion > potion && splash_potion > lingering_potion){
+				if(splashPotion > potion && splashPotion > lingeringPotion){
 					itemStack = new ItemStack(Items.SPLASH_POTION);
-				}else if(lingering_potion > potion && lingering_potion > splash_potion){
+				}else if(lingeringPotion > potion && lingeringPotion > splashPotion){
 					itemStack = new ItemStack(Items.LINGERING_POTION);
+				}else if(splashPotion == lingeringPotion && splashPotion > potion){
+					itemStack = new ItemStack(Items.SPLASH_POTION);
 				}else{
 					itemStack = new ItemStack(Items.POTION);
 				}
-				PotionContentsComponent component = PotionContentsComponent.DEFAULT;
+				component = PotionContentsComponent.DEFAULT;
 				for(int i = 0; i <= 8; i++){
 					ItemStack ij = craftingInventory.getStack(i);
 					if(ij.getItem() != Items.AIR){
 						for (StatusEffectInstance k : ij.get(DataComponentTypes.POTION_CONTENTS).getEffects()) {
-							new_effect = true;
+							newEffect = true;
 							if(!(k.getEffectType().equals(StatusEffects.INSTANT_HEALTH) || k.getEffectType().equals(StatusEffects.INSTANT_DAMAGE))){
 								for(StatusEffectInstance p : component.getEffects()){
 									if(p.getEffectType().equals(k.getEffectType())){
-										if(new_effect){
-											new_effect = false;
+										if(newEffect){
+											newEffect = false;
 										}
 										if(k.getAmplifier() > p.getAmplifier()){
 											component = replace(component, p, k);
@@ -90,7 +100,7 @@ public abstract class PotionMixingMixin {
 									}
 								}
 							}
-							if(new_effect){
+							if(newEffect){
 								component = component.with(k);
 							}
 						}
@@ -98,18 +108,30 @@ public abstract class PotionMixingMixin {
 				}
 				itemStack.set(DataComponentTypes.POTION_CONTENTS, component);
 				if(itemStack.getItem() == Items.POTION){
-					itemStack.set(DataComponentTypes.CUSTOM_NAME, Text.literal(MinecraftClient.getInstance().getLanguageManager().getLanguage().equals("zh_cn") ? "§f混合的药水" : "§fMixed Potion"));
+					itemStack.set(DataComponentTypes.CUSTOM_NAME, Text.literal("§fMixed Potion"));
 				}else if(itemStack.getItem() == Items.SPLASH_POTION){
-					itemStack.set(DataComponentTypes.CUSTOM_NAME, Text.literal(MinecraftClient.getInstance().getLanguageManager().getLanguage().equals("zh_cn") ? "§f喷溅型混合药水" : "§fMixed Splash Potion"));
+					itemStack.set(DataComponentTypes.CUSTOM_NAME, Text.literal("§fMixed Splash Potion"));
 				}else{
-					itemStack.set(DataComponentTypes.CUSTOM_NAME, Text.literal(MinecraftClient.getInstance().getLanguageManager().getLanguage().equals("zh_cn") ? "§f滞留型混合药水" : "§fMixed Lingering Potion"));
+					itemStack.set(DataComponentTypes.CUSTOM_NAME, Text.literal("§fMixed Lingering Potion"));
 				}
 				//End of the new codes
-				ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
+				serverPlayerEntity = (ServerPlayerEntity) player;
 				resultInventory.setStack(0, itemStack);
 				handler.setPreviousTrackedSlot(0, itemStack);
 				serverPlayerEntity.networkHandler.sendPacket(new ScreenHandlerSlotUpdateS2CPacket(handler.syncId, handler.nextRevision(), 0, itemStack));
 			}
 		}
+	}
+
+	private static PotionContentsComponent replace(PotionContentsComponent component, StatusEffectInstance effect1, StatusEffectInstance effect2){
+		PotionContentsComponent component1 = PotionContentsComponent.DEFAULT;
+		for(StatusEffectInstance l : component.customEffects()){
+			if(l.equals(effect1)){
+				component1 = component1.with(effect2);
+			}else{
+				component1 = component1.with(l);
+			}
+		}
+		return component1;
 	}
 }
