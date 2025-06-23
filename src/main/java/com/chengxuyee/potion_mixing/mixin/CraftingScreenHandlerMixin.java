@@ -29,11 +29,11 @@ public abstract class CraftingScreenHandlerMixin {
 
         ItemStack mixedPotion = PotionMixingHandler.mixPotions(craftingInventory);
         resultInventory.setStack(0, mixedPotion);
-        // 同步到客户端
+        
         ((ServerPlayerEntity) player).networkHandler.sendPacket(
                 new ScreenHandlerSlotUpdateS2CPacket(handler.syncId, handler.nextRevision(), 0, mixedPotion)
         );
-        ci.cancel(); // 阻止原版处理
+        ci.cancel();
     }
 
     private static boolean isPotionMixRecipe(RecipeInputInventory inventory) {
@@ -42,10 +42,10 @@ public abstract class CraftingScreenHandlerMixin {
             Item item = inventory.getStack(i).getItem();
             if (item == Items.AIR) continue;
             if (item != Items.POTION && item != Items.SPLASH_POTION && item != Items.LINGERING_POTION) {
-                return false; // 存在非药水物品
+                return false;
             }
             potionCount++;
         }
-        return potionCount >= 2; // 至少2瓶药水
+        return potionCount >= 2;
     }
 }
