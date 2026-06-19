@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"id": "potion_mixing",
+	"version": "${version}",
+	"name": "Potion Mixing",
+	"description": "A mod which allows players to mix potions together.",
+	"authors": [
+		"Chengxuyee"
+	],
+	"contact": {
+		"sources": "https://github.com/Chengxuyee/PotionMixing"
+	},
+	"license": "MIT",
+	"icon": "assets/potion_mixing/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.chengxuyee.potion_mixing.PotionMixing"
+		]
+	},
+	"mixins": [
+		"potion_mixing.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.15.11",
+		"minecraft": ">=1.21 <=1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
